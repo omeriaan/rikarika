@@ -1,0 +1,17 @@
+{
+	"version":"Sample 1.0.0",
+	"model":"sae.moc",
+	"textures":[
+		"sae/texture_00.png"
+	],
+	"motions":{
+		"idle":[
+			{"file":"motions/idol.idle.mtn"}
+		],
+		"":[
+			{"file":"motions/nori-nori.mtn"},
+			{"file":"motions/poke-to.mtn"},
+			{"file":"motions/yayoi.motion.mtn"}
+		]
+	}
+}

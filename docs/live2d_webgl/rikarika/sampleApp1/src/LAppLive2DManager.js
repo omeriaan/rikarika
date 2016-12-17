@@ -1,26 +1,26 @@
 function LAppLive2DManager()
 {
     // console.log("--> LAppLive2DManager()");
-    
+
     // モデルデータ
     this.models = [];  // LAppModel
-    
+
     //  サンプル機能
     this.count = -1;
     this.reloadFlg = false; // モデル再読み込みのフラグ
-    
+
     Live2D.init();
     Live2DFramework.setPlatformManager(new PlatformManager);
-    
+
 }
 
 LAppLive2DManager.prototype.createModel = function()
 {
     // console.log("--> LAppLive2DManager.createModel()");
-    
+
     var model = new LAppModel();
     this.models.push(model);
-    
+
     return model;
 }
 
@@ -28,7 +28,7 @@ LAppLive2DManager.prototype.createModel = function()
 LAppLive2DManager.prototype.changeModel = function(gl)
 {
     // console.log("--> LAppLive2DManager.update(gl)");
-    
+
     if (this.reloadFlg)
     {
         // モデル切り替えボタンが押された時、モデルを再読み込みする
@@ -38,37 +38,72 @@ LAppLive2DManager.prototype.changeModel = function(gl)
         var thisRef = this;
         switch (no)
         {
-            case 0: // ハル
+            // case 0: // ハル
+            //     this.releaseModel(1, gl);
+            //     this.releaseModel(0, gl);
+            //     // OpenGLのコンテキストをセット
+            //     this.createModel();
+            //     this.models[0].load(gl, LAppDefine.MODEL_HARU);
+            //     break;
+            // case 1: // しずく
+            //     this.releaseModel(0, gl);
+            //     this.createModel();
+            //     this.models[0].load(gl, LAppDefine.MODEL_SHIZUKU);
+            //     break;
+            // case 2: // わんこ
+            //     this.releaseModel(0, gl);
+            //     this.createModel();
+            //     this.models[0].load(gl, LAppDefine.MODEL_WANKO);
+            //     break;
+            // case 3: // Epsilon2.1モデル
+            //     this.releaseModel(0, gl);
+            //     this.createModel();
+            //     this.models[0].load(gl, LAppDefine.MODEL_EPSILON);
+            //     break;
+            // case 4: // 複数モデル
+            //     this.releaseModel(0, gl);
+            //     // 一体目のモデル
+            //     this.createModel();
+            //     this.models[0].load(gl, LAppDefine.MODEL_HARU_A, function() {
+            //         // 二体目のモデル
+            //         thisRef.createModel();
+            //         thisRef.models[1].load(gl, LAppDefine.MODEL_HARU_B);
+            //     });
+            //     break;
+            case 0: // 莉嘉
                 this.releaseModel(1, gl);
                 this.releaseModel(0, gl);
                 // OpenGLのコンテキストをセット
                 this.createModel();
-                this.models[0].load(gl, LAppDefine.MODEL_HARU);
+                this.models[0].load(gl, LAppDefine.MODEL_RIKA);
                 break;
-            case 1: // しずく
+            case 1: // 紗枝
+                this.releaseModel(1, gl);
                 this.releaseModel(0, gl);
+                // OpenGLのコンテキストをセット
                 this.createModel();
-                this.models[0].load(gl, LAppDefine.MODEL_SHIZUKU);
+                this.models[0].load(gl, LAppDefine.MODEL_SAE);
                 break;
-            case 2: // わんこ
+            case 2: // やよい
+                this.releaseModel(1, gl);
                 this.releaseModel(0, gl);
+                // OpenGLのコンテキストをセット
                 this.createModel();
-                this.models[0].load(gl, LAppDefine.MODEL_WANKO);
+                this.models[0].load(gl, LAppDefine.MODEL_YAYOI);
                 break;
-            case 3: // Epsilon2.1モデル
+            case 3: // 雪歩
+                this.releaseModel(1, gl);
                 this.releaseModel(0, gl);
+                // OpenGLのコンテキストをセット
                 this.createModel();
-                this.models[0].load(gl, LAppDefine.MODEL_EPSILON);
+                this.models[0].load(gl, LAppDefine.MODEL_YUKIHO);
                 break;
-            case 4: // 複数モデル
+            case 4: // 真
+                this.releaseModel(1, gl);
                 this.releaseModel(0, gl);
-                // 一体目のモデル
+                // OpenGLのコンテキストをセット
                 this.createModel();
-                this.models[0].load(gl, LAppDefine.MODEL_HARU_A, function() {
-                    // 二体目のモデル
-                    thisRef.createModel();
-                    thisRef.models[1].load(gl, LAppDefine.MODEL_HARU_B);
-                });
+                this.models[0].load(gl, LAppDefine.MODEL_MAKOTO);
                 break;
             default:
                 break;
@@ -80,9 +115,9 @@ LAppLive2DManager.prototype.changeModel = function(gl)
 LAppLive2DManager.prototype.getModel = function(no)
 {
     // console.log("--> LAppLive2DManager.getModel(" + no + ")");
-    
+
     if (no >= this.models.length) return null;
-    
+
     return this.models[no];
 };
 
@@ -94,11 +129,11 @@ LAppLive2DManager.prototype.getModel = function(no)
 LAppLive2DManager.prototype.releaseModel = function(no, gl)
 {
     // console.log("--> LAppLive2DManager.releaseModel(" + no + ")");
-    
+
     if (this.models.length <= no) return;
 
     this.models[no].release(gl);
-    
+
     delete this.models[no];
     this.models.splice(no, 1);
 };
@@ -159,7 +194,7 @@ LAppLive2DManager.prototype.minScaleEvent = function()
  * タップしたときのイベント
  */
 LAppLive2DManager.prototype.tapEvent = function(x, y)
-{    
+{
     if (LAppDefine.DEBUG_LOG)
         console.log("tapEvent view x:" + x + " y:" + y);
 
@@ -187,4 +222,3 @@ LAppLive2DManager.prototype.tapEvent = function(x, y)
 
     return true;
 };
-

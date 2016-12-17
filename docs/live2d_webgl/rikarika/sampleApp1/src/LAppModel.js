@@ -1,13 +1,13 @@
 //============================================================
 //============================================================
-//  class LAppModel     extends L2DBaseModel         
+//  class LAppModel     extends L2DBaseModel
 //============================================================
 //============================================================
 function LAppModel()
 {
     //L2DBaseModel.apply(this, arguments);
     L2DBaseModel.prototype.constructor.call(this);
-    
+
     this.modelHomeDir = "";
     this.modelSetting = null;
     this.tmpMatrix = [];
@@ -23,23 +23,23 @@ LAppModel.prototype.load = function(gl, modelSettingPath, callback)
     this.setUpdating(true);
     this.setInitialized(false);
 
-    this.modelHomeDir = modelSettingPath.substring(0, modelSettingPath.lastIndexOf("/") + 1); 
+    this.modelHomeDir = modelSettingPath.substring(0, modelSettingPath.lastIndexOf("/") + 1);
 
     this.modelSetting = new ModelSettingJson();
-    
+
     var thisRef = this;
-    
+
     this.modelSetting.loadModelSetting(modelSettingPath, function(){
         // モデルデータを読み込む
         var path = thisRef.modelHomeDir + thisRef.modelSetting.getModelFile();
         thisRef.loadModelData(path, function(model){
-            
+
             for (var i = 0; i < thisRef.modelSetting.getTextureNum(); i++)
             {
                 // テクスチャを読み込む
-                var texPaths = thisRef.modelHomeDir + 
+                var texPaths = thisRef.modelHomeDir +
                     thisRef.modelSetting.getTextureFile(i);
-                
+
                 thisRef.loadTexture(i, texPaths, function() {
                     // すべてのテクスチャを読み込んだ後の処理
                     if( thisRef.isTexLoaded ) {
@@ -48,13 +48,13 @@ LAppModel.prototype.load = function(gl, modelSettingPath, callback)
                         {
                             // 古い表情を削除
                             thisRef.expressions = {};
-                            
+
                             for (var j = 0; j < thisRef.modelSetting.getExpressionNum(); j++)
                             {
                                 var expName = thisRef.modelSetting.getExpressionName(j);
-                                var expFilePath = thisRef.modelHomeDir + 
+                                var expFilePath = thisRef.modelHomeDir +
                                     thisRef.modelSetting.getExpressionFile(j);
-                                
+
                                 thisRef.loadExpression(expName, expFilePath);
                             }
                         }
@@ -63,26 +63,26 @@ LAppModel.prototype.load = function(gl, modelSettingPath, callback)
                             thisRef.expressionManager = null;
                             thisRef.expressions = {};
                         }
-                        
-                        
+
+
                         // 自動目パチ
                         if (thisRef.eyeBlink == null)
                         {
                             thisRef.eyeBlink = new L2DEyeBlink();
                         }
-                        
+
                         // 物理演算
                         if (thisRef.modelSetting.getPhysicsFile() != null)
                         {
-                            thisRef.loadPhysics(thisRef.modelHomeDir + 
+                            thisRef.loadPhysics(thisRef.modelHomeDir +
                                                 thisRef.modelSetting.getPhysicsFile());
                         }
                         else
                         {
                             thisRef.physics = null;
                         }
-                        
-                        
+
+
                         // パーツ切り替え
                         if (thisRef.modelSetting.getPoseFile() != null)
                         {
@@ -98,8 +98,8 @@ LAppModel.prototype.load = function(gl, modelSettingPath, callback)
                         {
                             thisRef.pose = null;
                         }
-                        
-                        
+
+
                         // レイアウト
                         if (thisRef.modelSetting.getLayout() != null)
                         {
@@ -126,7 +126,7 @@ LAppModel.prototype.load = function(gl, modelSettingPath, callback)
                             if (layout["right"] != null)
                                 thisRef.modelMatrix.right(layout["right"]);
                         }
-                        
+
                         for (var j = 0; j < thisRef.modelSetting.getInitParamNum(); j++)
                         {
                             // パラメータを上書き
@@ -144,12 +144,12 @@ LAppModel.prototype.load = function(gl, modelSettingPath, callback)
                                 thisRef.modelSetting.getInitPartsVisibleValue(j)
                             );
                         }
-                        
-                        
+
+
                         // パラメータを保存。次回のloadParamで読みだされる
                         thisRef.live2DModel.saveParam();
                         // thisRef.live2DModel.setGL(gl);
-                        
+
                         // アイドリングはあらかじめ読み込んでおく。
                         thisRef.preloadMotionGroup(LAppDefine.MOTION_GROUP_IDLE);
                         thisRef.mainMotionManager.stopAllMotions();
@@ -158,7 +158,7 @@ LAppModel.prototype.load = function(gl, modelSettingPath, callback)
                         thisRef.setInitialized(true); // 初期化完了
 
                         if (typeof callback == "function") callback();
-                        
+
                     }
                 });
             }
@@ -185,7 +185,7 @@ LAppModel.prototype.release = function(gl)
 LAppModel.prototype.preloadMotionGroup = function(name)
 {
     var thisRef = this;
-    
+
     for (var i = 0; i < this.modelSetting.getMotionNum(name); i++)
     {
         var file = this.modelSetting.getMotionFile(name, i);
@@ -193,7 +193,7 @@ LAppModel.prototype.preloadMotionGroup = function(name)
             motion.setFadeIn(thisRef.modelSetting.getMotionFadeIn(name, i));
             motion.setFadeOut(thisRef.modelSetting.getMotionFadeOut(name, i));
         });
-        
+
     }
 }
 
@@ -202,31 +202,31 @@ LAppModel.prototype.update = function()
 {
     // console.log("--> LAppModel.update()");
 
-    if(this.live2DModel == null) 
+    if(this.live2DModel == null)
     {
         if (LAppDefine.DEBUG_LOG) console.error("Failed to update.");
-        
+
         return;
     }
-    
+
     var timeMSec = UtSystem.getUserTimeMSec() - this.startTimeMSec;
     var timeSec = timeMSec / 1000.0;
     var t = timeSec * 2 * Math.PI; // 2πt
-    
+
     // 待機モーション判定
     if (this.mainMotionManager.isFinished())
     {
         // モーションの再生がない場合、待機モーションの中からランダムで再生する
         this.startRandomMotion(LAppDefine.MOTION_GROUP_IDLE, LAppDefine.PRIORITY_IDLE);
     }
-    
-    //-----------------------------------------------------------------		
-    
+
+    //-----------------------------------------------------------------
+
     // 前回セーブされた状態をロード
     this.live2DModel.loadParam();
-    
+
     /* インスタンスが作られていたら更新 */
-    
+
     var update = this.mainMotionManager.updateParam(this.live2DModel); // モーションを更新
     if (!update) {
         // 目ぱち
@@ -237,63 +237,63 @@ LAppModel.prototype.update = function()
 
     // 状態を保存
     this.live2DModel.saveParam();
-    
-    //-----------------------------------------------------------------		
-    
+
+    //-----------------------------------------------------------------
+
     // 表情でパラメータ更新（相対変化）
-    if (this.expressionManager != null && 
-        this.expressions != null && 
+    if (this.expressionManager != null &&
+        this.expressions != null &&
         !this.expressionManager.isFinished())
     {
-        this.expressionManager.updateParam(this.live2DModel); 
+        this.expressionManager.updateParam(this.live2DModel);
     }
 
     // ドラッグによる顔の向きの調整
     // -30から30の値を加える
-    this.live2DModel.addToParamFloat("PARAM_ANGLE_X", this.dragX * 30, 1); 
+    this.live2DModel.addToParamFloat("PARAM_ANGLE_X", this.dragX * 30, 1);
     this.live2DModel.addToParamFloat("PARAM_ANGLE_Y", this.dragY * 30, 1);
     this.live2DModel.addToParamFloat("PARAM_ANGLE_Z", (this.dragX * this.dragY) * -30, 1);
 
     // ドラッグによる体の向きの調整
     // -10から10の値を加える
-    this.live2DModel.addToParamFloat("PARAM_BODY_ANGLE_X", this.dragX*10, 1); 
+    this.live2DModel.addToParamFloat("PARAM_BODY_ANGLE_X", this.dragX*10, 1);
 
     // ドラッグによる目の向きの調整
     // -1から1の値を加える
-    this.live2DModel.addToParamFloat("PARAM_EYE_BALL_X", this.dragX, 1); 
+    this.live2DModel.addToParamFloat("PARAM_EYE_BALL_X", this.dragX, 1);
     this.live2DModel.addToParamFloat("PARAM_EYE_BALL_Y", this.dragY, 1);
 
 
     // 呼吸など
-    this.live2DModel.addToParamFloat("PARAM_ANGLE_X", 
+    this.live2DModel.addToParamFloat("PARAM_ANGLE_X",
                                      Number((15 * Math.sin(t / 6.5345))), 0.5);
-    this.live2DModel.addToParamFloat("PARAM_ANGLE_Y", 
+    this.live2DModel.addToParamFloat("PARAM_ANGLE_Y",
                                      Number((8 * Math.sin(t / 3.5345))), 0.5);
-    this.live2DModel.addToParamFloat("PARAM_ANGLE_Z", 
+    this.live2DModel.addToParamFloat("PARAM_ANGLE_Z",
                                      Number((10 * Math.sin(t / 5.5345))), 0.5);
-    this.live2DModel.addToParamFloat("PARAM_BODY_ANGLE_X", 
+    this.live2DModel.addToParamFloat("PARAM_BODY_ANGLE_X",
                                      Number((4 * Math.sin(t / 15.5345))), 0.5);
-    this.live2DModel.setParamFloat("PARAM_BREATH", 
+    this.live2DModel.setParamFloat("PARAM_BREATH",
                                    Number((0.5 + 0.5 * Math.sin(t / 3.2345))), 1);
-    
+
     // 物理演算
     if (this.physics != null)
     {
         this.physics.updateParam(this.live2DModel); // 物理演算でパラメータ更新
     }
-    
+
     // リップシンクの設定
     if (this.lipSync == null)
     {
         this.live2DModel.setParamFloat("PARAM_MOUTH_OPEN_Y",
                                        this.lipSyncValue);
     }
-    
+
     // ポーズ
     if( this.pose != null ) {
         this.pose.updateParam(this.live2DModel);
     }
-        
+
     this.live2DModel.update();
 };
 
@@ -335,10 +335,10 @@ LAppModel.prototype.startRandomMotion = function(name, priority)
  */
 LAppModel.prototype.startMotion = function(name, no, priority)
 {
-    // console.log("startMotion : " + name + " " + no + " " + priority);
-    
+    console.log("startMotion : " + name + " " + no + " " + priority);
+
     var motionName = this.modelSetting.getMotionFile(name, no);
-    
+
     if (motionName == null || motionName == "")
     {
         if (LAppDefine.DEBUG_LOG)
@@ -346,7 +346,7 @@ LAppModel.prototype.startMotion = function(name, no, priority)
         return;
     }
 
-    if (priority == LAppDefine.PRIORITY_FORCE) 
+    if (priority == LAppDefine.PRIORITY_FORCE)
     {
         this.mainMotionManager.setReservePriority(priority);
     }
@@ -360,20 +360,20 @@ LAppModel.prototype.startMotion = function(name, no, priority)
     var thisRef = this;
     var motion;
 
-    if (this.motions[name] == null) 
+    if (this.motions[name] == null)
     {
         this.loadMotion(null, this.modelHomeDir + motionName, function(mtn) {
             motion = mtn;
-            
+
             // フェードイン、フェードアウトの設定
             thisRef.setFadeInFadeOut(name, no, priority, motion);
-            
+
         });
     }
-    else 
+    else
     {
         motion = this.motions[name];
-        
+
         // フェードイン、フェードアウトの設定
         thisRef.setFadeInFadeOut(name, no, priority, motion);
     }
@@ -383,11 +383,11 @@ LAppModel.prototype.startMotion = function(name, no, priority)
 LAppModel.prototype.setFadeInFadeOut = function(name, no, priority, motion)
 {
     var motionName = this.modelSetting.getMotionFile(name, no);
-    
+
     motion.setFadeIn(this.modelSetting.getMotionFadeIn(name, no));
     motion.setFadeOut(this.modelSetting.getMotionFadeOut(name, no));
-    
-    
+
+
     if (LAppDefine.DEBUG_LOG)
             console.log("Start motion : " + motionName);
 
@@ -399,13 +399,13 @@ LAppModel.prototype.setFadeInFadeOut = function(name, no, priority, motion)
     {
         var soundName = this.modelSetting.getMotionSound(name, no);
         // var player = new Sound(this.modelHomeDir + soundName);
-        
+
         var snd = document.createElement("audio");
         snd.src = this.modelHomeDir + soundName;
-        
+
         if (LAppDefine.DEBUG_LOG)
             console.log("Start sound : " + soundName);
-        
+
         snd.play();
         this.mainMotionManager.startMotionPrio(motion, priority);
     }
@@ -418,10 +418,10 @@ LAppModel.prototype.setFadeInFadeOut = function(name, no, priority, motion)
 LAppModel.prototype.setExpression = function(name)
 {
     var motion = this.expressions[name];
-    
+
     if (LAppDefine.DEBUG_LOG)
         console.log("Expression : " + name);
-        
+
     this.expressionManager.startMotion(motion, false);
 }
 
@@ -432,22 +432,22 @@ LAppModel.prototype.setExpression = function(name)
 LAppModel.prototype.draw = function(gl)
 {
     //console.log("--> LAppModel.draw()");
-    
+
     // if(this.live2DModel == null) return;
-    
+
     // 通常
     MatrixStack.push();
-    
+
     MatrixStack.multMatrix(this.modelMatrix.getArray());
-    
+
     this.tmpMatrix = MatrixStack.getMatrix()
     this.live2DModel.setMatrix(this.tmpMatrix);
     this.live2DModel.draw();
-    
+
     MatrixStack.pop();
-    
+
 };
-        
+
 
 /*
  * 当たり判定との簡易テスト。
@@ -457,14 +457,14 @@ LAppModel.prototype.hitTest = function(id, testX, testY)
 {
     var len = this.modelSetting.getHitAreaNum();
     for (var i = 0; i < len; i++)
-    {        
+    {
         if (id == this.modelSetting.getHitAreaName(i))
         {
             var drawID = this.modelSetting.getHitAreaID(i);
-            
+
             return this.hitTestSimple(drawID, testX, testY);
         }
     }
-    
+
     return false; // 存在しない場合はfalse
 }
